@@ -1,0 +1,11 @@
+downloads/
+logs/
+__pycache__/
+*.pyc
+*.log
+.env
+venv/
+.venv/
+*.mp4
+*.mov
+*.avi
