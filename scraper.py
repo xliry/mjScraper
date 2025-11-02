@@ -105,7 +105,52 @@ class MidjourneyVideoScraper:
         print(f"✅ Found {len(self.video_urls)} unique video URLs")
         return list(self.video_urls)
 
-    async def scrape(self) -> List[str]:
+    async def download_videos_with_browser(self, page: Page, video_urls: List[str]) -> None:
+        """Download videos using browser context to maintain authentication"""
+        print(f"\n🎬 Starting download of {len(video_urls)} videos...")
+        print(f"📁 Saving to: {self.download_folder.absolute()}\n")
+
+        for i, url in enumerate(video_urls, 1):
+            try:
+                print(f"[{i}/{len(video_urls)}]")
+
+                # Create filename
+                import hashlib
+                url_hash = hashlib.md5(url.encode()).hexdigest()[:10]
+                ext = '.mp4' if '.mp4' in url.lower() else '.webm' if '.webm' in url.lower() else '.mp4'
+                filename = f"midjourney_video_{i}_{url_hash}{ext}"
+                filepath = self.download_folder / filename
+
+                # Skip if already exists
+                if filepath.exists():
+                    print(f"⏭️  Skipping (already exists): {filename}")
+                    continue
+
+                print(f"⬇️  Downloading: {filename}")
+
+                # Use page.request to download with browser context
+                response = await page.request.get(url)
+
+                if response.status == 200:
+                    video_data = await response.body()
+                    with open(filepath, 'wb') as f:
+                        f.write(video_data)
+
+                    file_size = len(video_data) / (1024 * 1024)  # MB
+                    print(f"✅ Downloaded: {filename} ({file_size:.2f} MB)")
+                else:
+                    print(f"❌ Failed: {filename} (Status: {response.status})")
+
+            except Exception as e:
+                print(f"❌ Error downloading {filename}: {e}")
+                continue
+
+        print(f"\n{'='*60}")
+        print(f"✅ Download complete!")
+        print(f"📁 Location: {self.download_folder.absolute()}")
+        print(f"{'='*60}\n")
+
+    async def scrape(self, download_videos: bool = False) -> List[str]:
         """Main scraping method"""
         async with async_playwright() as p:
             print("🚀 Launching browser...")
@@ -163,6 +208,10 @@ class MidjourneyVideoScraper:
                 for url in video_urls:
                     f.write(f"{url}\n")
             print(f"💾 Video URLs saved to {urls_file}")
+
+            # Download videos if requested
+            if download_videos and video_urls:
+                await self.download_videos_with_browser(page, video_urls)
 
             await browser.close()
 

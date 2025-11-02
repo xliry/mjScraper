@@ -6,7 +6,6 @@ This script orchestrates the scraping and downloading of videos from midjourney.
 
 import asyncio
 from scraper import MidjourneyVideoScraper
-from downloader import VideoDownloader
 
 
 async def main():
@@ -15,48 +14,30 @@ async def main():
     print("="*60)
     print()
 
-    # Step 1: Scrape video URLs
-    print("📍 STEP 1: Scraping video URLs from Midjourney...")
+    # Ask user for download preference upfront
+    print("Choose action:")
+    print("  1. Scrape URLs and download videos (Recommended)")
+    print("  2. Only scrape URLs (no download)")
+    print()
+
+    choice = input("Enter choice (1/2) [default: 1]: ").strip() or "1"
+    download_videos = (choice == "1")
+
+    print()
+    print("📍 Starting scraper...")
     print()
 
     scraper = MidjourneyVideoScraper()
-    video_urls = await scraper.scrape()
+    video_urls = await scraper.scrape(download_videos=download_videos)
 
     if not video_urls:
         print("❌ No videos found. Exiting...")
         return
 
     print()
-    print(f"✅ Found {len(video_urls)} videos!")
-    print()
-
-    # Step 2: Download videos
-    print("📍 STEP 2: Downloading videos...")
-    print()
-
-    # Ask user for download method
-    print("Choose download method:")
-    print("  1. Sequential (one at a time, with progress bars) - Recommended")
-    print("  2. Parallel (multiple at once, faster but less detailed progress)")
-    print("  3. Skip downloads (only scrape URLs)")
-    print()
-
-    choice = input("Enter choice (1/2/3) [default: 1]: ").strip() or "1"
-
-    if choice == "3":
-        print("⏭️  Skipping downloads. URLs saved to downloads/video_urls.txt")
-        return
-
-    downloader = VideoDownloader()
-
-    if choice == "2":
-        await downloader.download_all_async(video_urls)
-    else:
-        downloader.download_all_sync(video_urls)
-
-    print()
     print("="*60)
     print("🎉 ALL DONE!")
+    print(f"📊 Total videos: {len(video_urls)}")
     print("="*60)
 
 

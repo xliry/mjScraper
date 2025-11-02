@@ -7,9 +7,10 @@ Python scraper için Midjourney.com'dan video indirme aracı.
 - ✅ Otomatik popup kapatma ("Look around a bit")
 - ✅ Infinite scroll ile tüm videoları yükleme
 - ✅ Network request yakalama ile video URL çıkarma
-- ✅ Paralel veya sıralı video indirme
-- ✅ İlerleme takibi (progress bars)
+- ✅ Browser context ile video indirme (403 Forbidden hatası yok!)
+- ✅ Playwright authentication ile CDN erişimi
 - ✅ Tekrar indirmeyi önleme
+- ✅ Dosya boyutu gösterimi
 
 ## Kurulum
 
@@ -34,18 +35,22 @@ playwright install chromium
 
 ## Kullanım
 
-### Basit kullanım (her şeyi otomatik yap):
+### Basit kullanım (önerilen):
 
 ```bash
 python main.py
 ```
+
+Program açılınca 2 seçenek sunulur:
+- **1. Scrape URLs and download videos** - URL'leri topla ve videoları indir
+- **2. Only scrape URLs** - Sadece URL'leri topla
 
 Bu komut:
 1. Sayfayı açar
 2. Popup'ı kapatır
 3. Sayfa sonuna kadar scroll eder
 4. Tüm video URL'lerini toplar
-5. Videoları indirir
+5. Videoları browser context ile indirir (403 hatası yok!)
 
 ### Sadece URL'leri topla:
 
@@ -55,11 +60,7 @@ python scraper.py
 
 URL'ler `downloads/video_urls.txt` dosyasına kaydedilir.
 
-### Sadece videoları indir (URL'ler zaten toplanmışsa):
-
-```bash
-python downloader.py
-```
+**NOT:** `downloader.py` artık kullanılmıyor. Browser context gerektirdiği için tüm işlem `scraper.py` içinde yapılıyor.
 
 ## Ayarlar
 
@@ -97,9 +98,13 @@ mjScraper/
 **Videolar yüklenmiyor:**
 - `SCROLL_PAUSE_TIME` değerini artır (yavaş internet için)
 
-**Download hataları:**
-- `DOWNLOAD_TIMEOUT` değerini artır
-- Sequential download kullan (daha güvenli)
+**403 Forbidden hatası:**
+- ✅ Artık düzeltildi! Browser context kullanılarak çözüldü.
+- Eğer hala sorun yaşıyorsan, browser'ı headless=False modda çalıştır
+
+**Download çok yavaş:**
+- Normal! Her video browser context üzerinden indiriliyor
+- Büyük videolar için zaman alabilir
 
 ## Gereksinimler
 
