@@ -1,113 +1,126 @@
 # Midjourney Video Scraper
 
-Python scraper için Midjourney.com'dan video indirme aracı.
+A Python-based web scraper for downloading videos from Midjourney.com.
 
-## Özellikler
+## Features
 
-- ✅ Otomatik popup kapatma ("Look around a bit")
-- ✅ Infinite scroll ile tüm videoları yükleme
-- ✅ Network request yakalama ile video URL çıkarma
-- ✅ Browser context ile video indirme (403 Forbidden hatası yok!)
-- ✅ Playwright authentication ile CDN erişimi
-- ✅ Tekrar indirmeyi önleme
-- ✅ Dosya boyutu gösterimi
+- ✅ Automatic popup handling ("Look around a bit" dialog)
+- ✅ Infinite scroll to load all videos
+- ✅ Network request interception for video URL extraction
+- ✅ Browser context video downloads (no 403 Forbidden errors!)
+- ✅ JavaScript fetch API for authenticated downloads
+- ✅ Skip already downloaded videos
+- ✅ File size reporting
 
-## Kurulum
+## Installation
 
-### 1. Python virtual environment oluştur (önerilen)
+### 1. Create Python virtual environment (recommended)
 
 ```bash
 python -m venv venv
 venv\Scripts\activate  # Windows
+source venv/bin/activate  # Linux/Mac
 ```
 
-### 2. Paketleri yükle
+### 2. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Playwright browser'ı yükle
+### 3. Install Playwright browser
 
 ```bash
 playwright install chromium
 ```
 
-## Kullanım
+## Usage
 
-### Basit kullanım (önerilen):
+### Simple usage (recommended):
 
 ```bash
 python main.py
 ```
 
-Program açılınca 2 seçenek sunulur:
-- **1. Scrape URLs and download videos** - URL'leri topla ve videoları indir
-- **2. Only scrape URLs** - Sadece URL'leri topla
+The program will present 2 options:
+- **1. Scrape URLs and download videos** - Collect URLs and download videos
+- **2. Only scrape URLs** - Only collect URLs without downloading
 
-Bu komut:
-1. Sayfayı açar
-2. Popup'ı kapatır
-3. Sayfa sonuna kadar scroll eder
-4. Tüm video URL'lerini toplar
-5. Videoları browser context ile indirir (403 hatası yok!)
+This command will:
+1. Open the page in browser
+2. Close the popup automatically
+3. Scroll to the bottom to load all videos
+4. Extract all video URLs
+5. Download videos using browser context (no 403 errors!)
 
-### Sadece URL'leri topla:
+### Only scrape URLs:
 
 ```bash
 python scraper.py
 ```
 
-URL'ler `downloads/video_urls.txt` dosyasına kaydedilir.
+URLs will be saved to `downloads/video_urls.txt`.
 
-**NOT:** `downloader.py` artık kullanılmıyor. Browser context gerektirdiği için tüm işlem `scraper.py` içinde yapılıyor.
+**NOTE:** `downloader.py` is no longer used. All operations are handled in `scraper.py` to maintain browser context.
 
-## Ayarlar
+## Configuration
 
-`config.py` dosyasından ayarları değiştirebilirsin:
+You can modify settings in `config.py`:
 
-- `SCROLL_PAUSE_TIME`: Scroll sonrası bekleme süresi (saniye)
-- `SCROLL_ATTEMPTS`: Maksimum scroll sayısı
-- `MAX_CONCURRENT_DOWNLOADS`: Paralel indirme sayısı
-- `DOWNLOAD_TIMEOUT`: Video başına timeout (saniye)
+- `SCROLL_PAUSE_TIME`: Wait time after each scroll (seconds)
+- `SCROLL_ATTEMPTS`: Maximum number of scroll attempts
+- `MAX_CONCURRENT_DOWNLOADS`: Number of parallel downloads
+- `DOWNLOAD_TIMEOUT`: Timeout per video (seconds)
 
-## Proje Yapısı
+## Project Structure
 
 ```
 mjScraper/
-├── main.py              # Ana script
+├── main.py              # Main script
 ├── scraper.py           # Web scraping logic
-├── downloader.py        # Video indirme logic
-├── config.py            # Ayarlar
-├── requirements.txt     # Python paketleri
-├── downloads/           # İndirilen videolar ve URL listesi
-└── README.md           # Bu dosya
+├── downloader.py        # Video download logic (deprecated)
+├── config.py            # Configuration settings
+├── requirements.txt     # Python dependencies
+├── downloads/           # Downloaded videos and URL list
+└── README.md           # This file
 ```
 
-## İpuçları
+## Tips
 
-- İlk kez çalıştırırken browser açık görünür (`headless=False`). Bunu `scraper.py:95`'te değiştirebilirsin.
-- Çok fazla video varsa paralel indirme kullan (ama dikkat et, sunucu rate limit yapabilir)
-- Scroll sayısını artırmak istersen `config.SCROLL_ATTEMPTS` değerini yükselt
+- Browser runs in visible mode by default (`headless=False`). Change this in `scraper.py:158` if needed.
+- For many videos, parallel downloads may be faster (but watch for rate limiting)
+- Increase `config.SCROLL_ATTEMPTS` if you want to scroll more
 
-## Sorun Giderme
+## Troubleshooting
 
-**Popup bulunamıyor:**
-- Popup selector'ları `scraper.py:24-29` satırlarında güncelle
+**Popup not found:**
+- Update popup selectors in `scraper.py:24-29`
 
-**Videolar yüklenmiyor:**
-- `SCROLL_PAUSE_TIME` değerini artır (yavaş internet için)
+**Videos not loading:**
+- Increase `SCROLL_PAUSE_TIME` value (for slow internet connections)
 
-**403 Forbidden hatası:**
-- ✅ Artık düzeltildi! Browser context kullanılarak çözüldü.
-- Eğer hala sorun yaşıyorsan, browser'ı headless=False modda çalıştır
+**403 Forbidden error:**
+- ✅ Fixed! Now using JavaScript fetch API with browser context
+- If still experiencing issues, ensure browser runs in headless=False mode
 
-**Download çok yavaş:**
-- Normal! Her video browser context üzerinden indiriliyor
-- Büyük videolar için zaman alabilir
+**Download too slow:**
+- Normal! Each video downloads through browser context
+- Large videos may take time
 
-## Gereksinimler
+## Requirements
 
 - Python 3.8+
 - Windows/Linux/Mac
-- İnternet bağlantısı
+- Internet connection
+
+## How It Works
+
+The scraper uses Playwright to:
+1. Launch a Chromium browser instance
+2. Navigate to Midjourney's video explore page
+3. Handle authentication and popups automatically
+4. Scroll to load all video content dynamically
+5. Extract video URLs from network requests and DOM elements
+6. Download videos using JavaScript's fetch API within the browser context to maintain authentication
+
+This approach bypasses CDN restrictions by utilizing the browser's native authentication state.
