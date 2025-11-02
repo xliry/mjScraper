@@ -106,7 +106,7 @@ class MidjourneyVideoScraper:
         return list(self.video_urls)
 
     async def download_videos_with_browser(self, page: Page, video_urls: List[str]) -> None:
-        """Download videos using browser context to maintain authentication"""
+        """Download videos by fetching them as blobs through JavaScript evaluation"""
         print(f"\n🎬 Starting download of {len(video_urls)} videos...")
         print(f"📁 Saving to: {self.download_folder.absolute()}\n")
 
@@ -128,18 +128,34 @@ class MidjourneyVideoScraper:
 
                 print(f"⬇️  Downloading: {filename}")
 
-                # Use page.request to download with browser context
-                response = await page.request.get(url)
+                # Method: Use JavaScript to fetch video as blob and convert to base64
+                video_data = await page.evaluate("""
+                    async (url) => {
+                        const response = await fetch(url);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}`);
+                        }
+                        const blob = await response.blob();
+                        return new Promise((resolve) => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                            reader.readAsDataURL(blob);
+                        });
+                    }
+                """, url)
 
-                if response.status == 200:
-                    video_data = await response.body()
+                if video_data:
+                    # Decode base64 and save
+                    import base64
+                    video_bytes = base64.b64decode(video_data)
+
                     with open(filepath, 'wb') as f:
-                        f.write(video_data)
+                        f.write(video_bytes)
 
-                    file_size = len(video_data) / (1024 * 1024)  # MB
+                    file_size = len(video_bytes) / (1024 * 1024)  # MB
                     print(f"✅ Downloaded: {filename} ({file_size:.2f} MB)")
                 else:
-                    print(f"❌ Failed: {filename} (Status: {response.status})")
+                    print(f"❌ Failed: {filename} (No data received)")
 
             except Exception as e:
                 print(f"❌ Error downloading {filename}: {e}")
