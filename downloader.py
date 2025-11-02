@@ -16,6 +16,17 @@ class VideoDownloader:
         self.output_folder.mkdir(exist_ok=True)
         self.downloaded_count = 0
         self.failed_count = 0
+        # Browser-like headers to avoid 403 errors
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': '*/*',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Referer': 'https://www.midjourney.com/',
+            'Origin': 'https://www.midjourney.com',
+            'Sec-Fetch-Dest': 'video',
+            'Sec-Fetch-Mode': 'no-cors',
+            'Sec-Fetch-Site': 'cross-site',
+        }
 
     def sanitize_filename(self, url: str) -> str:
         """Create a safe filename from URL"""
@@ -46,7 +57,7 @@ class VideoDownloader:
 
             print(f"⬇️  Downloading: {filename}")
 
-            response = requests.get(url, stream=True, timeout=config.DOWNLOAD_TIMEOUT)
+            response = requests.get(url, stream=True, timeout=config.DOWNLOAD_TIMEOUT, headers=self.headers)
             response.raise_for_status()
 
             total_size = int(response.headers.get('content-length', 0))
@@ -122,7 +133,7 @@ class VideoDownloader:
         print(f"\n🎬 Starting parallel download of {len(video_urls)} videos...")
         print(f"📁 Saving to: {self.output_folder.absolute()}\n")
 
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(headers=self.headers) as session:
             # Create semaphore to limit concurrent downloads
             semaphore = asyncio.Semaphore(config.MAX_CONCURRENT_DOWNLOADS)
 
